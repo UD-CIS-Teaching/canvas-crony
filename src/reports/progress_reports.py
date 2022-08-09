@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from canvas_data import CourseData
 from cli_config import CronyConfiguration
 from reports.report_types import Report

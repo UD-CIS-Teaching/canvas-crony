@@ -24,6 +24,8 @@ Then there could be a CLI mode where it just runs it for all loaded courses that
 
 We also need a secrets file to hold the connection data. Should be able to specify that from the command line too.
 """
+from __future__ import annotations
+
 from email_service import send_emails
 from cli_config import CronyConfiguration
 from canvas_data import load_course_data, load_course_folder

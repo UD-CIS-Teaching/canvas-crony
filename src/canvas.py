@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from typing import Optional
 
 from canvas_data import clean_user, RawCourseData, CourseData, Submission, Assignment

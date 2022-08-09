@@ -1,3 +1,4 @@
+from __future__ import annotations
 from canvas_data import Report
 
 
