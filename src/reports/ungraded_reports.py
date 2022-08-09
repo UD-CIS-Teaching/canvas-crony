@@ -9,8 +9,8 @@ from cli_config import CronyConfiguration
 from reports.report_types import Report
 
 
-RECENTLY_THRESHOLD = 3 # days
-ANCIENT_THRESHOLD = 7 # days
+RECENTLY_THRESHOLD = 3  # days
+ANCIENT_THRESHOLD = 7  # days
 
 
 def make_ungraded_reports(course: CourseData, args: CronyConfiguration) -> list[Report]:
@@ -85,7 +85,7 @@ def make_ungraded_reports_staff(course: CourseData, big_pile: dict[GradingStatus
         flat_pile = sorted([(days_old(submission), status, submission)
                             for status, pile in piles.items()
                             for submission in pile
-                            if status in ("missing", "graded")],
+                            if status not in ("missing", "graded")],
                            key= lambda item: (-item[0], item[1]))
         previous_age = None
         for age, status, submission in flat_pile:
@@ -106,6 +106,7 @@ def make_ungraded_reports_staff(course: CourseData, big_pile: dict[GradingStatus
         # Wrap it up
         staff_reports.append(Report("ungraded", ta, staff_pdf, course, args))
     return staff_reports
+
 
 def make_ungraded_reports_instructor(course: CourseData, big_pile: dict[GradingStatus, set[int]],
                                      ta_grading_piles: dict[int, dict[GradingStatus, list[Submission]]],
@@ -141,6 +142,7 @@ def make_ungraded_reports_instructor(course: CourseData, big_pile: dict[GradingS
         # Wrap it up
         instructor_reports.append(Report("ungraded", instructor, instructor_pdf, course, args))
     return instructor_reports
+
 
 def classify_submission(submission) -> GradingStatus:
     # Skip graded assignments
