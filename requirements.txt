@@ -1,0 +1,8 @@
+tqdm
+pandas
+matplotlib
+pyyaml
+requests
+fpdf2
+pytest
+requests-cache
