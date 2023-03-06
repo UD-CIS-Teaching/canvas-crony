@@ -27,6 +27,16 @@ def days_between(d1, d2=None):
     return abs((d2 - d1).days)
 
 
+def past_date(d1, d2=None):
+    """ Whether d2 (defaults to now if not given) is past d1 """
+    d1 = datetime.strptime(d1, CANVAS_DATE_STRING)
+    if d2 is None:
+        d2 = datetime.utcnow()
+    else:
+        d2 = datetime.strptime(d2, CANVAS_DATE_STRING)
+    return d2 > d1
+
+
 def decode_response_or_error(response, from_url):
     try:
         return response.json()

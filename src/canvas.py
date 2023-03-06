@@ -4,13 +4,12 @@ from typing import Optional
 
 from canvas_data import clean_user, RawCourseData, CourseData, Submission, Assignment
 from canvas_request import CanvasRequest
-from settings import yaml_load
+from settings import Settings
 
 
 class CanvasApi(CanvasRequest):
-    def __init__(self, settings_path: Optional[str], cache: bool):
-        self.settings_path = settings_path
-        self.settings = yaml_load(settings_path)
+    def __init__(self, settings: Settings, cache: bool):
+        self.settings = settings
         super().__init__(self.settings, cache)
 
     def rehydrate_course(self, raw_course_data: RawCourseData) -> CourseData:
@@ -23,7 +22,7 @@ class CanvasApi(CanvasRequest):
             'enrollment_state[]': ['active', 'invited', 'rejected', 'completed', 'inactive'],
             'include[]': ['enrollments']
         })
-        users = [clean_user(u) for u in users]
+        users = [u for u in [clean_user(u) for u in users] if u]
         user_by_email = {u['email']: u for u in users}
         cloned['users'] = user_by_id = {u['id']: u for u in users}
         # Students
@@ -46,9 +45,11 @@ class CanvasApi(CanvasRequest):
             cloned['instructors'] = instructors = []
         # Student Group Memberships
         cloned['group_memberships'] = {}
+        cloned['group_membership_ids'] = {}
         for group in groups:
             group_membership = self.get(f'groups/{group["id"]}/users', course=None, all=True)
             cloned['group_memberships'][group['name']] = [user_by_id[u['id']] for u in group_membership]
+            cloned['group_memberships'][group['id']] = {u['id'] for u in group_membership}
         # Assignment Groups
         assignment_groups = self.get('assignment_groups', all=True, course=course_id)
         cloned['assignment_groups'] = {g['id']: g for g in assignment_groups}

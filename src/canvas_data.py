@@ -55,6 +55,8 @@ class User(TypedDict):
 
 
 def clean_user(user: User):
+    if 'email' not in user:
+        return None
     user['email'] = user['email'].lower()
     return user
 
@@ -69,6 +71,19 @@ class AssignmentGroup(TypedDict):
     name: str
 
 
+class AssignmentOverride(TypedDict):
+    id: int
+    title: str
+    # Will have only one of these
+    student_ids: list[int]
+    course_section_id: int
+    group_id: int
+    # Should have all of these, though they may be None
+    due_at: str
+    lock_at: str
+    unlock_at: str
+
+
 class Assignment(TypedDict):
     id: int
     name: str
@@ -79,7 +94,7 @@ class Assignment(TypedDict):
     points_possible: float
     published: bool
     assignment_group: AssignmentGroup
-
+    overrides: list[AssignmentOverride]
 
 class Submission(TypedDict):
     id: int
@@ -125,6 +140,7 @@ class CourseData(TypedDict):
     assignment_groups: dict[int, AssignmentGroup]
     groups: list[Group]
     group_memberships: dict[str, list[User]]
+    group_membership_ids: dict[int, set[int]]
     # Mixed pulled/course file data
     staff: dict[int, User]
     students: dict[int, User]
@@ -145,4 +161,17 @@ def load_course_folder(folder: str) -> list[RawCourseData]:
         yield yaml_load(os.path.join(folder, filename))
 
 
-GradingStatus = Literal['graded', 'ungraded', 'resubmitted', 'resubmitted early', 'ungraded early', 'missing']
+GradingStatus = Literal['graded',
+                        'not yet graded (late)', 'resubmitted (late)',
+                        'not yet graded (ready)', 'resubmitted (ready)',
+                        'not yet graded (early)', 'resubmitted (early)',
+                        #'early resubmission', 'early submission',
+                        #'not submitted',
+                        #'missing',
+                        'in progress',
+                        'missed due date',
+                        'missed lock date',
+                        'future assignments']
+
+NOT_CRITICAL: set[GradingStatus] = {'future assignments', 'not yet due', 'graded',
+                                    'missed due date', 'missed lock date', 'in progress'}

@@ -11,5 +11,7 @@ class CronyConfiguration(TypedDict):
     email: bool
     only: str
     cache: bool
+    progress: bool
     settings: Optional[str]
     output: Optional[str]
+    log: str

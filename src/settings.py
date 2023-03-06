@@ -6,6 +6,8 @@ from typing import TypedDict
 class Settings(TypedDict):
     canvas_url: str
     canvas_token: str
+    mail_server: str
+    mail_server_port: int
 
 
 def yaml_load(path):
