@@ -301,10 +301,10 @@ def classify_availability(submission: Submission, groups: dict[int, set[int]]) -
 
 
 def check_availability(availability):
-    if availability['lock_at'] and past_date(availability['lock_at']):
+    if availability.get('lock_at') and past_date(availability['lock_at']):
         return 'locked'
-    if availability['due_at'] and past_date(availability['due_at']):
+    if availability.get('due_at') and past_date(availability['due_at']):
         return 'past due'
-    if availability['unlock_at'] and past_date(availability['unlock_at']):
+    if availability.get('unlock_at') and past_date(availability['unlock_at']):
         return 'open'
     return 'future'
