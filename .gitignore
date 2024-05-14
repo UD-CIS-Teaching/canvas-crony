@@ -1,3 +1,5 @@
+.idea/
+
 secrets/
 course_data/
 *.sqlite
