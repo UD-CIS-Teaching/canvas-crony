@@ -24,6 +24,7 @@ Then there could be a CLI mode where it just runs it for all loaded courses that
 
 We also need a secrets file to hold the connection data. Should be able to specify that from the command line too.
 """
+
 from __future__ import annotations
 
 import sys
@@ -39,7 +40,7 @@ from reports import make_reports
 from reports.report_types import ReportSet
 from settings import yaml_load
 
-logger = logging.getLogger('crony')
+logger = logging.getLogger("crony")
 
 
 class CanvasCrony:
@@ -49,11 +50,14 @@ class CanvasCrony:
         self.progress_bar = None
 
     def init_logger(self, args: CronyConfiguration):
-        if args['log']:
+        if args["log"]:
             logger.setLevel(logging.DEBUG)
-            ch = RotatingFileHandler(filename=args['log'], encoding='utf-8', backupCount=5,
-                                     maxBytes=1024 ** 3)
-            formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+            ch = RotatingFileHandler(
+                filename=args["log"], encoding="utf-8", backupCount=5, maxBytes=1024**3
+            )
+            formatter = logging.Formatter(
+                "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+            )
             ch.setFormatter(formatter)
             logger.addHandler(ch)
             logger.info("Starting Canvas Crony")
@@ -66,14 +70,14 @@ class CanvasCrony:
             logger.error(f"Error during execution: {exception}")
 
     def run(self, args: CronyConfiguration) -> list[ReportSet]:
-        settings = yaml_load(args['settings'])
-        self.start_progress_bar(args['progress'])
+        settings = yaml_load(args["settings"])
+        self.start_progress_bar(args["progress"])
         logger.info("Downloading Course Data")
-        canvas = CanvasApi(settings, args['cache'])
-        if args['course'] is not None:
-            courses = [load_course_data(args['course'])]
-        elif args['courses'] is not None:
-            courses = load_course_folder(args['courses'])
+        canvas = CanvasApi(settings, args["cache"])
+        if args["course"] is not None:
+            courses = [load_course_data(args["course"])]
+        elif args["courses"] is not None:
+            courses = load_course_folder(args["courses"])
         else:
             logger.error("Need to have either `courses` or `course` provided")
             raise ValueError("Need to have either `courses` or `course` provided")
@@ -83,13 +87,13 @@ class CanvasCrony:
         logger.info("Building Reports")
         report_sets = [make_reports(course, args) for course in courses]
         self.update_progress()
-        if args['output']:
+        if args["output"]:
             for report_set in report_sets:
                 report_set.output()
         self.update_progress()
-        if args['email']:
+        if args["email"]:
             logger.info("Sending emails")
-            only_emails = args['only'].split(',') if args['only'] else []
+            only_emails = args["only"].split(",") if args["only"] else []
             send_emails(report_sets, only_emails, settings)
         else:
             logger.info("Skipping emails")

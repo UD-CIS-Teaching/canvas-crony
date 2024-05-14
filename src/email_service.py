@@ -8,14 +8,16 @@ import logging
 from reports.report_types import Report, ReportSet
 from settings import Settings
 
-logger = logging.getLogger('crony')
+logger = logging.getLogger("crony")
 
 
-def send_emails(report_sets: list[ReportSet], only_emails: list[str], settings: Settings):
+def send_emails(
+    report_sets: list[ReportSet], only_emails: list[str], settings: Settings
+):
     grouped_targets = defaultdict(list)
     for report_set in report_sets:
         for report in report_set.reports:
-            email = report.target['email']
+            email = report.target["email"]
             if only_emails and email not in only_emails:
                 continue
             grouped_targets[email].append(report)
@@ -30,26 +32,33 @@ def send_email(reports: list[Report], settings: Settings) -> bool:
     if len(reports) > 1:
         msg["Subject"] = "Canvas Crony Reports"
     else:
-        msg["Subject"] = report.subject.format(course_name=report.course['course']['name'],
-                                               user_name=report.target['name'])
+        msg["Subject"] = report.subject.format(
+            course_name=report.course["course"]["name"], user_name=report.target["name"]
+        )
     msg["From"] = "Canvas Crony Tool <noreply+canvas_crony@udel.edu>"
     msg["To"] = f"{report.target['name']} <{report.target['email']}"
     # definitely don't mess with the .preamble
 
     if len(reports) > 1:
-        msg.set_content("Hi, I am the Canvas Crony! I send you regular updates on some of your courses."
-                        " I have some reports for you!")
+        msg.set_content(
+            "Hi, I am the Canvas Crony! I send you regular updates on some of your courses."
+            " I have some reports for you!"
+        )
     else:
-        msg.set_content("Hi, I am the Canvas Crony! I send you regular updates on some of your courses."
-                        " I have a report for you!")
+        msg.set_content(
+            "Hi, I am the Canvas Crony! I send you regular updates on some of your courses."
+            " I have a report for you!"
+        )
 
     for report in reports:
         with open(report.path, "rb") as fp:
-            msg.add_attachment(fp.read(), maintype="pdf", subtype="pdf", filename=report.filename)
+            msg.add_attachment(
+                fp.read(), maintype="pdf", subtype="pdf", filename=report.filename
+            )
 
     # Notice how smtplib now includes a send_message() method
-    mail_server = settings['mail_server']
-    mail_server_port = settings['mail_server_port']
+    mail_server = settings["mail_server"]
+    mail_server_port = settings["mail_server_port"]
     try:
         with smtplib.SMTP(mail_server, mail_server_port) as s:
             result = s.send_message(msg)

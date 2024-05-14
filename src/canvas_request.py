@@ -28,7 +28,7 @@ def days_between(d1, d2=None):
 
 
 def past_date(d1, d2=None):
-    """ Whether d2 (defaults to now if not given) is past d1 """
+    """Whether d2 (defaults to now if not given) is past d1"""
     d1 = datetime.strptime(d1, CANVAS_DATE_STRING)
     if d2 is None:
         d2 = datetime.utcnow()
@@ -46,16 +46,22 @@ def decode_response_or_error(response, from_url):
 
 def check_response_errors(response, from_url):
     if response.status_code == 503:
-        raise Exception("503 error, service not available yet! Try again later!" + str(response.status_code))
+        raise Exception(
+            "503 error, service not available yet! Try again later!"
+            + str(response.status_code)
+        )
     elif response.status_code == 404:
         response_json = decode_response_or_error(response, from_url)
         raise Exception(
-            f"404 error, resource does not exist for\n{from_url}\nFull error was:\n" + str(response_json))
-    elif not str(response.status_code).startswith('2'):
+            f"404 error, resource does not exist for\n{from_url}\nFull error was:\n"
+            + str(response_json)
+        )
+    elif not str(response.status_code).startswith("2"):
         response_json = decode_response_or_error(response, from_url)
         raise Exception(
-            f"Possible error code ({response.status_code}) for:\n{from_url}\nFull error was:\n" + str(
-                response_json))
+            f"Possible error code ({response.status_code}) for:\n{from_url}\nFull error was:\n"
+            + str(response_json)
+        )
 
 
 class CanvasData(TypedDict):
@@ -64,16 +70,25 @@ class CanvasData(TypedDict):
 
 class CanvasRequest:
     def __init__(self, settings: Settings, cache: bool):
-        self.canvas_url = settings['canvas_url'] + "/"
+        self.canvas_url = settings["canvas_url"] + "/"
         self.canvas_api_url = self.canvas_url + "api/v1/"
-        self.canvas_token = settings['canvas_token']
+        self.canvas_token = settings["canvas_token"]
         if cache:
-            self.session = requests_cache.CachedSession('cron_cache')
+            self.session = requests_cache.CachedSession("cron_cache")
         else:
             self.session = requests.Session()
 
-    def _canvas_request(self, verb, command, course_id, data=None, all=True, params=None, result_type=list,
-                        use_api=True) -> list[CanvasData]:
+    def _canvas_request(
+        self,
+        verb,
+        command,
+        course_id,
+        data=None,
+        all=True,
+        params=None,
+        result_type=list,
+        use_api=True,
+    ) -> list[CanvasData]:
         # Initialize data and params if they were not provided
         if data is None:
             data = {}
@@ -86,13 +101,13 @@ class CanvasRequest:
             next_url = self.canvas_url
         if course_id is not None:
             if isinstance(course_id, dict):
-                course_id = course_id['id']
-            next_url += f'courses/{course_id}/'
+                course_id = course_id["id"]
+            next_url += f"courses/{course_id}/"
         next_url += command
-        data['access_token'] = self.canvas_token
+        data["access_token"] = self.canvas_token
         # Handle getting all the results
         if all:
-            data['per_page'] = 100
+            data["per_page"] = 100
             final_result = []
             while True:
                 response = verb(next_url, data=data, params=params)
@@ -103,8 +118,8 @@ class CanvasRequest:
                     final_result.append(decode_response_or_error(response, next_url))
                 else:
                     final_result = response
-                if 'next' in response.links:
-                    next_url = response.links['next']['url']
+                if "next" in response.links:
+                    next_url = response.links["next"]["url"]
                 else:
                     return final_result
         # Only get one result
@@ -116,40 +131,119 @@ class CanvasRequest:
             elif result_type == dict:
                 return [decode_response_or_error(response, next_url)]
 
-    def get(self, command, course='default', data=None, all=False, params=None, result_type=list, use_api=True):
-        return self._canvas_request(self.session.get, command, course, data, all, params, result_type=result_type,
-                                    use_api=use_api)
+    def get(
+        self,
+        command,
+        course="default",
+        data=None,
+        all=False,
+        params=None,
+        result_type=list,
+        use_api=True,
+    ):
+        return self._canvas_request(
+            self.session.get,
+            command,
+            course,
+            data,
+            all,
+            params,
+            result_type=result_type,
+            use_api=use_api,
+        )
 
-    def post(self, command, course='default', data=None, all=False, params=None, result_type=list, use_api=True):
-        return self._canvas_request(self.session.post, command, course, data, all, params, result_type=result_type,
-                                    use_api=use_api)
+    def post(
+        self,
+        command,
+        course="default",
+        data=None,
+        all=False,
+        params=None,
+        result_type=list,
+        use_api=True,
+    ):
+        return self._canvas_request(
+            self.session.post,
+            command,
+            course,
+            data,
+            all,
+            params,
+            result_type=result_type,
+            use_api=use_api,
+        )
 
-    def put(self, command, course='default', data=None, all=False, params=None, result_type=list, use_api=True):
-        return self._canvas_request(self.session.put, command, course, data, all, params, result_type=result_type,
-                                    use_api=use_api)
+    def put(
+        self,
+        command,
+        course="default",
+        data=None,
+        all=False,
+        params=None,
+        result_type=list,
+        use_api=True,
+    ):
+        return self._canvas_request(
+            self.session.put,
+            command,
+            course,
+            data,
+            all,
+            params,
+            result_type=result_type,
+            use_api=use_api,
+        )
 
-    def delete(self, command, course='default', data=None, all=False, params=None, result_type=None, use_api=True):
-        return self._canvas_request(self.session.delete, command, course, data, all, params, result_type=result_type,
-                                    use_api=use_api)
+    def delete(
+        self,
+        command,
+        course="default",
+        data=None,
+        all=False,
+        params=None,
+        result_type=None,
+        use_api=True,
+    ):
+        return self._canvas_request(
+            self.session.delete,
+            command,
+            course,
+            data,
+            all,
+            params,
+            result_type=result_type,
+            use_api=use_api,
+        )
 
     def progress_loop(self, progress_id, DELAY=3):
         while True:
-            result, = self._canvas_request(self.session.get, f'progress/{progress_id}', None, None, False, None, dict,
-                                           True)
-            if result['workflow_state'] == 'completed':
+            (result,) = self._canvas_request(
+                self.session.get,
+                f"progress/{progress_id}",
+                None,
+                None,
+                False,
+                None,
+                dict,
+                True,
+            )
+            if result["workflow_state"] == "completed":
                 return True
-            elif result['workflow_state'] == 'failed':
+            elif result["workflow_state"] == "failed":
                 return False
             else:
                 # TODO: Replace with TQDM, proper logging
-                print(result['workflow_state'], result['message'],
-                      str(int(round(result['completion'] * 10)) / 10) + "%")
+                print(
+                    result["workflow_state"],
+                    result["message"],
+                    str(int(round(result["completion"] * 10)) / 10) + "%",
+                )
                 time.sleep(DELAY)
 
     def download_file(self, url, destination):
-        data = {'access_token': self.canvas_token}
+        data = {"access_token": self.canvas_token}
         r = self.session.get(url, data=data)
-        f = open(destination, 'wb')
+        f = open(destination, "wb")
         for chunk in r.iter_content(chunk_size=512 * 1024):
             if chunk:  # filter out keep-alive new chunks
                 f.write(chunk)

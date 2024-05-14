@@ -9,10 +9,11 @@ class Course(TypedDict):
     """
     The actual canvas course, without other data like students and stuff
     """
+
     id: int
     name: str
     course_code: str
-    workflow_state: Literal['unpublished', 'available', 'completed', 'deleted']
+    workflow_state: Literal["unpublished", "available", "completed", "deleted"]
     created_at: str
     start_at: str
     end_at: str
@@ -36,7 +37,13 @@ class Enrollment(TypedDict):
     id: int
     user_id: int
     course_section_id: int
-    type: Literal['StudentEnrollment', 'TeacherEnrollment', 'TaEnrollment', 'DesignerEnrollment', 'ObserverEnrollment']
+    type: Literal[
+        "StudentEnrollment",
+        "TeacherEnrollment",
+        "TaEnrollment",
+        "DesignerEnrollment",
+        "ObserverEnrollment",
+    ]
     created_at: str
     updated_at: str
     end_at: str
@@ -53,9 +60,9 @@ class User(TypedDict):
 
 
 def clean_user(user: User):
-    if 'email' not in user:
+    if "email" not in user:
         return None
-    user['email'] = user['email'].lower()
+    user["email"] = user["email"].lower()
     return user
 
 
@@ -102,15 +109,20 @@ class Submission(TypedDict):
     attempt: int
     grade: str
     score: float
-    submission_type: Literal['online_text_entry', 'online_url', 'online_upload', 'media_recording',
-    'student_annotation']
+    submission_type: Literal[
+        "online_text_entry",
+        "online_url",
+        "online_upload",
+        "media_recording",
+        "student_annotation",
+    ]
     submitted_at: str
     grader: Union[int, User]
     graded_at: str
     late: bool
     excused: bool
     missing: bool
-    late_policy_status: Literal['late', 'missing', 'extended', 'none', None]
+    late_policy_status: Literal["late", "missing", "extended", "none", None]
     seconds_late: int
     workflow_state: Literal["submitted"]
     redo_request: bool
@@ -160,17 +172,28 @@ def load_course_folder(folder: str) -> list[RawCourseData]:
         yield yaml_load(os.path.join(folder, filename))
 
 
-GradingStatus = Literal['graded',
-'not yet graded (late)', 'resubmitted (late)',
-'not yet graded (ready)', 'resubmitted (ready)',
-'not yet graded (early)', 'resubmitted (early)',
+GradingStatus = Literal[
+    "graded",
+    "not yet graded (late)",
+    "resubmitted (late)",
+    "not yet graded (ready)",
+    "resubmitted (ready)",
+    "not yet graded (early)",
+    "resubmitted (early)",
     # 'early resubmission', 'early submission',
     # 'not submitted',
     # 'missing',
-'in progress',
-'missed due date',
-'missed lock date',
-'future assignments']
+    "in progress",
+    "missed due date",
+    "missed lock date",
+    "future assignments",
+]
 
-NOT_CRITICAL: set[GradingStatus] = {'future assignments', 'not yet due', 'graded',
-                                    'missed due date', 'missed lock date', 'in progress'}
+NOT_CRITICAL: set[GradingStatus] = {
+    "future assignments",
+    "not yet due",
+    "graded",
+    "missed due date",
+    "missed lock date",
+    "in progress",
+}
