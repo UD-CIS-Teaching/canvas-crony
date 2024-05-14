@@ -60,6 +60,13 @@ parser.add_argument(
     help="The path to store the log data in. If not set, no log will be generated.",
 )
 
+parser.add_argument(
+    "--safe",
+    default=True,
+    type=bool,
+    help="If an error occurs, don't raise it, just log it.",
+)
+
 args = parser.parse_args()
 
 canvas_crony(vars(args))

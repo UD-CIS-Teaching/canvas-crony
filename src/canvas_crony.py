@@ -61,6 +61,8 @@ class CanvasCrony:
             ch.setFormatter(formatter)
             logger.addHandler(ch)
             logger.info("Starting Canvas Crony")
+        else:
+            logger.addHandler(logging.StreamHandler(sys.stdout))
 
     def run_safely(self, args: CronyConfiguration) -> list[ReportSet]:
         self.init_logger(args)
@@ -68,6 +70,8 @@ class CanvasCrony:
             return self.run(args)
         except Exception as exception:
             logger.error(f"Error during execution: {exception}")
+            if not args["safe"]:
+                raise exception
 
     def run(self, args: CronyConfiguration) -> list[ReportSet]:
         settings = yaml_load(args["settings"])

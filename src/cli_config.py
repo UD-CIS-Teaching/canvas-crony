@@ -16,3 +16,5 @@ class CronyConfiguration(TypedDict):
     settings: Optional[str]
     output: Optional[str]
     log: str
+    # Whether to re-raise exceptions or suppress them (logs either way)
+    safe: bool

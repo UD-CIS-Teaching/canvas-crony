@@ -9,7 +9,15 @@ from filesystem import clean_filename
 
 
 class Report:
-    def __init__(self, name: str, subject: str, target: User, pdf: FPDF, course: CourseData, args: CronyConfiguration):
+    def __init__(
+        self,
+        name: str,
+        subject: str,
+        target: User,
+        pdf: FPDF,
+        course: CourseData,
+        args: CronyConfiguration,
+    ):
         self.course = course
         self.args = args
         self.pdf = pdf
@@ -20,11 +28,17 @@ class Report:
         self.filename = None
 
     def output(self):
-        course_id = self.course['course']['id']
-        name = clean_filename(self.target['name'])
+        course_id = clean_filename(self.course["course"]["course_code"])
+        name = clean_filename(self.target["name"])
         self.filename = f"{self.name}_{course_id}_{name}.pdf"
-        self.path = os.path.join(self.args['output'], self.filename)
+        self.path = os.path.join(self.args["output"], self.filename)
         self.pdf.output(self.path)
+
+    def __str__(self):
+        return f"Report for {self.target['name']}"
+
+    def __repr__(self):
+        return f"Report({self.name!r}, {self.target['name']!r}, {self.course!r})"
 
 
 class ReportSet:
@@ -40,3 +54,11 @@ class ReportSet:
         # consolidate targets across reports?
         for report in self.reports:
             report.output()
+
+    def __str__(self):
+        return (
+            f"ReportSet for {self.course['course']['id']} ({len(self.reports)} reports)"
+        )
+
+    def __repr__(self):
+        return f"ReportSet({self.course['course']['id']}, {self.reports!r})"
