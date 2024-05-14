@@ -5,8 +5,6 @@ import os
 from settings import yaml_load
 
 
-
-
 class Course(TypedDict):
     """
     The actual canvas course, without other data like students and stuff
@@ -96,6 +94,7 @@ class Assignment(TypedDict):
     assignment_group: AssignmentGroup
     overrides: list[AssignmentOverride]
 
+
 class Submission(TypedDict):
     id: int
     user: User
@@ -104,7 +103,7 @@ class Submission(TypedDict):
     grade: str
     score: float
     submission_type: Literal['online_text_entry', 'online_url', 'online_upload', 'media_recording',
-                             'student_annotation']
+    'student_annotation']
     submitted_at: str
     grader: Union[int, User]
     graded_at: str
@@ -162,16 +161,16 @@ def load_course_folder(folder: str) -> list[RawCourseData]:
 
 
 GradingStatus = Literal['graded',
-                        'not yet graded (late)', 'resubmitted (late)',
-                        'not yet graded (ready)', 'resubmitted (ready)',
-                        'not yet graded (early)', 'resubmitted (early)',
-                        #'early resubmission', 'early submission',
-                        #'not submitted',
-                        #'missing',
-                        'in progress',
-                        'missed due date',
-                        'missed lock date',
-                        'future assignments']
+'not yet graded (late)', 'resubmitted (late)',
+'not yet graded (ready)', 'resubmitted (ready)',
+'not yet graded (early)', 'resubmitted (early)',
+    # 'early resubmission', 'early submission',
+    # 'not submitted',
+    # 'missing',
+'in progress',
+'missed due date',
+'missed lock date',
+'future assignments']
 
 NOT_CRITICAL: set[GradingStatus] = {'future assignments', 'not yet due', 'graded',
                                     'missed due date', 'missed lock date', 'in progress'}

@@ -62,7 +62,6 @@ class CanvasData(TypedDict):
     pass
 
 
-
 class CanvasRequest:
     def __init__(self, settings: Settings, cache: bool):
         self.canvas_url = settings['canvas_url'] + "/"
@@ -73,7 +72,8 @@ class CanvasRequest:
         else:
             self.session = requests.Session()
 
-    def _canvas_request(self, verb, command, course_id, data=None, all=True, params=None, result_type=list, use_api=True) -> list[CanvasData]:
+    def _canvas_request(self, verb, command, course_id, data=None, all=True, params=None, result_type=list,
+                        use_api=True) -> list[CanvasData]:
         # Initialize data and params if they were not provided
         if data is None:
             data = {}
@@ -117,20 +117,25 @@ class CanvasRequest:
                 return [decode_response_or_error(response, next_url)]
 
     def get(self, command, course='default', data=None, all=False, params=None, result_type=list, use_api=True):
-        return self._canvas_request(self.session.get, command, course, data, all, params, result_type=result_type, use_api=use_api)
+        return self._canvas_request(self.session.get, command, course, data, all, params, result_type=result_type,
+                                    use_api=use_api)
 
     def post(self, command, course='default', data=None, all=False, params=None, result_type=list, use_api=True):
-        return self._canvas_request(self.session.post, command, course, data, all, params, result_type=result_type, use_api=use_api)
+        return self._canvas_request(self.session.post, command, course, data, all, params, result_type=result_type,
+                                    use_api=use_api)
 
     def put(self, command, course='default', data=None, all=False, params=None, result_type=list, use_api=True):
-        return self._canvas_request(self.session.put, command, course, data, all, params, result_type=result_type, use_api=use_api)
+        return self._canvas_request(self.session.put, command, course, data, all, params, result_type=result_type,
+                                    use_api=use_api)
 
     def delete(self, command, course='default', data=None, all=False, params=None, result_type=None, use_api=True):
-        return self._canvas_request(self.session.delete, command, course, data, all, params, result_type=result_type, use_api=use_api)
+        return self._canvas_request(self.session.delete, command, course, data, all, params, result_type=result_type,
+                                    use_api=use_api)
 
     def progress_loop(self, progress_id, DELAY=3):
         while True:
-            result, = self._canvas_request(self.session.get, f'progress/{progress_id}', None, None, False, None, dict, True)
+            result, = self._canvas_request(self.session.get, f'progress/{progress_id}', None, None, False, None, dict,
+                                           True)
             if result['workflow_state'] == 'completed':
                 return True
             elif result['workflow_state'] == 'failed':

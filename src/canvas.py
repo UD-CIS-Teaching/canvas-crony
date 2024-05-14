@@ -62,7 +62,7 @@ class CanvasApi(CanvasRequest):
         # Submissions
         submissions = self.get('students/submissions', all=True, course=course_id, data={
             'student_ids[]': 'all',
-            #'assignment_ids[]': list(cloned['assignments'].keys()),
+            # 'assignment_ids[]': list(cloned['assignments'].keys()),
             'include[]': ['visibility', 'rubric_assessment']
         })
         cloned['submissions'] = {submission['id']: self.hydrate_submission(submission, cloned)
@@ -70,7 +70,8 @@ class CanvasApi(CanvasRequest):
         # Need to drop submissions for students who dropped
         cloned['submissions'] = {sid: s for sid, s in cloned['submissions'].items() if s}
         # Speed grader URL
-        cloned['speed_grader_url'] = 'https://udel.instructure.com/courses/{course_id}/gradebook/speed_grader?assignment_id={assignment_id}&student_id={user_id}'
+        cloned[
+            'speed_grader_url'] = 'https://udel.instructure.com/courses/{course_id}/gradebook/speed_grader?assignment_id={assignment_id}&student_id={user_id}'
         # All done
         return cloned
 

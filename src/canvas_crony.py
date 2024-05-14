@@ -52,7 +52,7 @@ class CanvasCrony:
         if args['log']:
             logger.setLevel(logging.DEBUG)
             ch = RotatingFileHandler(filename=args['log'], encoding='utf-8', backupCount=5,
-                                     maxBytes=1024**3)
+                                     maxBytes=1024 ** 3)
             formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
             ch.setFormatter(formatter)
             logger.addHandler(ch)
@@ -64,7 +64,6 @@ class CanvasCrony:
             return self.run(args)
         except Exception as exception:
             logger.error(f"Error during execution: {exception}")
-
 
     def run(self, args: CronyConfiguration) -> list[ReportSet]:
         settings = yaml_load(args['settings'])
