@@ -41,6 +41,8 @@ def make_score_reports(course: CourseData, args: CronyConfiguration) -> list[Rep
         # Machine graded
         if grader and isinstance(grader, int):
             continue
+        if grader is None:
+            continue
 
         if grader["id"] not in grader_piles:
             grader_piles[grader["id"]] = []
