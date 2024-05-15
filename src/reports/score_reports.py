@@ -64,6 +64,8 @@ def make_score_reports(course: CourseData, args: CronyConfiguration) -> list[Rep
 
 
 def iqr(scores):
+    if not scores:
+        return ["", "", "", "", ""]
     scores = sorted(scores)
     n = len(scores)
     q1 = scores[math.ceil(n * 0.25)]
@@ -80,6 +82,8 @@ def iqr(scores):
 
 
 def get_normal_stats(scores):
+    if not scores:
+        return ["", "", ""]
     mean = sum(scores) / len(scores)
     variance = sum((x - mean) ** 2 for x in scores) / len(scores)
     std_dev = math.sqrt(variance)
