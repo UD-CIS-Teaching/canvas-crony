@@ -63,7 +63,6 @@ parser.add_argument(
 parser.add_argument(
     "--unsafe",
     action="store_true",
-    type=bool,
     help="If an error occurs, raise it (will always log it).",
 )
 
