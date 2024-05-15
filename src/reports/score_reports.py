@@ -68,9 +68,9 @@ def iqr(scores):
         return ["", "", "", "", ""]
     scores = sorted(scores)
     n = len(scores)
-    q1 = scores[math.ceil(n * 0.25)]
-    median = scores[math.ceil(n * 0.5)]
-    q3 = scores[math.ceil(n * 0.75)]
+    q1 = scores[min(n - 1, math.ceil(n * 0.25))]
+    median = scores[min(n - 1, math.ceil(n * 0.5))]
+    q3 = scores[min(n - 1, math.ceil(n * 0.75))]
     # return [str(scores[0]), str(q1), str(median), str(q3), str(scores[-1])]
     return [
         f"{scores[0]:.2f}",
