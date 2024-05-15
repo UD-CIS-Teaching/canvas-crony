@@ -214,7 +214,7 @@ def combine_tables(
         new_table = [first_row]
         table_name = tables[0][row_id][0]
         for table_id, name in enumerate(names):
-            taken_row = tables[table_id][row_id]
+            taken_row = list(tables[table_id][row_id])
             taken_row[0] = name
             new_table.append(taken_row)
         taken_tables[table_name] = new_table
