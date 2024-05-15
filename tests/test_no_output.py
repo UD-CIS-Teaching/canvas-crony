@@ -18,7 +18,7 @@ def test_check_stats():
             "cache": True,
             "progress": True,
             "log": "",
-            "safe": False,
+            "unsafe": True,
         }
     )
     print([repr(r) for r in reports[0].reports])

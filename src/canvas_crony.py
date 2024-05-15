@@ -70,7 +70,7 @@ class CanvasCrony:
             return self.run(args)
         except Exception as exception:
             logger.error(f"Error during execution: {exception}")
-            if not args["safe"]:
+            if args["unsafe"]:
                 raise exception
 
     def run(self, args: CronyConfiguration) -> list[ReportSet]:

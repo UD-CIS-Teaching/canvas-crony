@@ -61,10 +61,10 @@ parser.add_argument(
 )
 
 parser.add_argument(
-    "--safe",
-    default=True,
+    "--unsafe",
+    action="store_true",
     type=bool,
-    help="If an error occurs, don't raise it, just log it.",
+    help="If an error occurs, raise it (will always log it).",
 )
 
 args = parser.parse_args()

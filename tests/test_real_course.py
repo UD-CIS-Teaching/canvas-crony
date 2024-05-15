@@ -18,7 +18,7 @@ def test_sample_course():
             "cache": True,
             "progress": True,
             "log": "../logs/run.log",
-            "safe": False,
+            "unsafe": True,
         }
     )
     assert True
