@@ -63,6 +63,10 @@ def make_score_reports(course: CourseData, args: CronyConfiguration) -> list[Rep
     return reports
 
 
+def f(x):
+    return f"{x:.2f}".rstrip("0").rstrip(".")
+
+
 def iqr(scores):
     if not scores:
         return ["", "", "", "", ""]
@@ -73,11 +77,11 @@ def iqr(scores):
     q3 = scores[min(n - 1, math.ceil(n * 0.75))]
     # return [str(scores[0]), str(q1), str(median), str(q3), str(scores[-1])]
     return [
-        f"{scores[0]:.2f}",
-        f"{q1:.2f}",
-        f"{median:.2f}",
-        f"{q3:.2f}",
-        f"{scores[-1]:.2f}",
+        f(scores[0]),
+        f(q1),
+        f(median),
+        f(q3),
+        f(scores[-1]),
     ]
 
 
@@ -87,7 +91,7 @@ def get_normal_stats(scores):
     mean = sum(scores) / len(scores)
     variance = sum((x - mean) ** 2 for x in scores) / len(scores)
     std_dev = math.sqrt(variance)
-    return [f"{mean:.2f}", f"{variance:.2f}", f"{std_dev:.2f}"]
+    return [f(mean), f(variance), f(std_dev)]
 
 
 @dataclass
@@ -129,21 +133,24 @@ def make_score_reports_staff(
             if sub["score"] == sub["assignment"]["points_possible"]
         ]
         extents_table = [
-            ["", "Number", "Percent"],
+            ["", "Number", "Percent", "Out of Total"],
             [
                 "Graded Submissions",
                 str(len(graded)),
-                f"{len(graded)/total_graded:.2%} (of {total_graded} total)",
+                f"{f(100*len(graded)/total_graded)}%",
+                str(total_graded),
             ],
             [
                 "Zeroes",
                 str(len(zeroes)),
-                f"{len(zeroes)/len(graded):.2%} (of {len(graded)})",
+                f"{f(100*len(zeroes)/len(graded))}%",
+                str(len(graded)),
             ],
             [
                 "Perfects",
                 str(len(perfects)),
-                f"{len(perfects)/len(graded):.2%} (of {len(graded)})",
+                f"{f(100*len(perfects)/len(graded))}%",
+                str(len(graded)),
             ],
         ]
         make_table(staff_pdf, extents_table)
@@ -157,7 +164,7 @@ def make_score_reports_staff(
             for sub in graded
         ]
         nonzero_scores = [
-            (sub["score"] / sub["assignment"]["points_possible"])
+            (100 * sub["score"] / sub["assignment"]["points_possible"])
             for sub in graded
             if sub["score"] and sub["assignment"]["points_possible"]
         ]
@@ -196,6 +203,22 @@ def make_score_reports_staff(
             )
         )
     return staff_reports, staff_tables
+
+
+def combine_tables(
+    tables: list[list[list[str]]], names: list[str]
+) -> dict[str, list[list[str]]]:
+    first_row = tables[0][0]
+    taken_tables = {}
+    for row_id in range(1, len(tables[0])):
+        new_table = [first_row]
+        table_name = tables[0][row_id][0]
+        for table_id, name in enumerate(names):
+            taken_row = tables[table_id][row_id]
+            taken_row[0] = name
+            new_table.append(taken_row)
+        taken_tables[table_name] = new_table
+    return taken_tables
 
 
 def make_score_reports_instructor(
@@ -237,13 +260,26 @@ def make_score_reports_instructor(
             ("IQR of Percentage Scores", "iqr"),
             ("Normal Stats of Percentage Scores", "normal_stats"),
         ]:
+            instructor_pdf.set_font(size=18)
             instructor_pdf.write(txt=stat_name + ":\n")
+            names = [course["users"][ta_id]["name"] for ta_id in staff_tables]
+            taken_tables = combine_tables(
+                [getattr(staff_tables[ta_id], stat_field) for ta_id in staff_tables],
+                names,
+            )
+            instructor_pdf.set_font(size=12)
+            for table_name, table in taken_tables.items():
+                instructor_pdf.write(txt=table_name + ":\n")
+                make_table(instructor_pdf, table)
+                instructor_pdf.ln()
+            """
             for ta_id, graded in staff_tables.items():
                 ta = course["users"][ta_id]
                 stat_table = getattr(staff_tables[ta_id], stat_field)
                 stat_table[0][0] = ta["name"]
                 make_table(instructor_pdf, stat_table)
                 instructor_pdf.ln()
+            """
 
         # Wrap it up
         instructor_reports.append(
