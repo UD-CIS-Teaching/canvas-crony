@@ -124,70 +124,99 @@ def make_score_reports_staff(
         # Summarize data
         staff_pdf.set_font("helvetica", size=14)
 
-        # Extents (Zeros and Perfects)
+        # Group by graded
+        graded_by_assignment = {
+            None: list(graded),
+        }
+        for submission in graded:
+            assignment_id = submission["assignment"]["id"]
+            if assignment_id not in graded_by_assignment:
+                graded_by_assignment[assignment_id] = []
+            graded_by_assignment[assignment_id].append(submission)
 
-        zeroes = [sub for sub in graded if sub["score"] == 0]
-        perfects = [
-            sub
-            for sub in graded
-            if sub["score"] == sub["assignment"]["points_possible"]
-        ]
-        extents_table = [
-            ["", "Number", "Percent", "Out of Total"],
-            [
-                "Graded Submissions",
-                str(len(graded)),
-                f"{f(100*len(graded)/total_graded)}%",
-                str(total_graded),
-            ],
-            [
-                "Zeroes",
-                str(len(zeroes)),
-                f"{f(100*len(zeroes)/len(graded))}%",
-                str(len(graded)),
-            ],
-            [
-                "Perfects",
-                str(len(perfects)),
-                f"{f(100*len(perfects)/len(graded))}%",
-                str(len(graded)),
-            ],
-        ]
-        make_table(staff_pdf, extents_table)
+        for assignment_id, graded in graded_by_assignment.items():
+            if not graded:
+                continue
+            assignment = graded[0]["assignment"]
+            # Header information
+            staff_pdf.set_font(size=18)
+            if assignment_id is None:
+                staff_pdf.write(txt="All Assignments:\n")
+                staff_pdf.set_font(size=12)
+            else:
+                staff_pdf.write(txt=assignment["name"] + ":\n")
+                staff_pdf.set_font(size=12)
+                staff_pdf.write(txt=f"Graded: {len(graded)}\n")
+                staff_pdf.write(txt=f"Total Points: {assignment['points_possible']}\n")
+            if assignment_id not in staff_tables:
+                staff_tables[assignment_id] = {}
 
-        all_scores = [
-            (
-                100 * sub["score"] / sub["assignment"].get("points_possible", 0)
-                if sub["assignment"]["points_possible"] and sub["score"]
-                else sub["score"] or 0
+            # Extents (Zeros and Perfects)
+            zeroes = [sub for sub in graded if sub["score"] == 0]
+            perfects = [
+                sub
+                for sub in graded
+                if sub["score"] == sub["assignment"]["points_possible"]
+            ]
+            extents_table = [
+                ["", "Number", "Percent", "Out of Total"],
+                [
+                    "Graded Submissions",
+                    str(len(graded)),
+                    f"{f(100*len(graded)/total_graded)}%",
+                    str(total_graded),
+                ],
+                [
+                    "Zeroes",
+                    str(len(zeroes)),
+                    f"{f(100*len(zeroes)/len(graded))}%",
+                    str(len(graded)),
+                ],
+                [
+                    "Perfects",
+                    str(len(perfects)),
+                    f"{f(100*len(perfects)/len(graded))}%",
+                    str(len(graded)),
+                ],
+            ]
+            make_table(staff_pdf, extents_table)
+
+            all_scores = [
+                (
+                    100 * sub["score"] / sub["assignment"].get("points_possible", 0)
+                    if sub["assignment"]["points_possible"] and sub["score"]
+                    else sub["score"] or 0
+                )
+                for sub in graded
+            ]
+            nonzero_scores = [
+                (100 * sub["score"] / sub["assignment"]["points_possible"])
+                for sub in graded
+                if sub["score"] and sub["assignment"]["points_possible"]
+            ]
+
+            # IQR (with and without zeroes)
+            staff_pdf.ln()
+            iqr_table = [
+                ["", "Min", "25%", "Median", "75%", "Max"],
+                ["All Scores", *iqr(all_scores)],
+                ["Non-Zero Scores", *iqr(nonzero_scores)],
+            ]
+            make_table(staff_pdf, iqr_table)
+
+            # Mean, Variance, Std Dev
+            staff_pdf.ln()
+            normal_stats = [
+                ["", "Mean", "Variance", "Std Dev"],
+                ["All Scores", *get_normal_stats(all_scores)],
+                ["Non-Zero Scores", *get_normal_stats(nonzero_scores)],
+            ]
+            make_table(staff_pdf, normal_stats)
+            staff_pdf.ln()
+
+            staff_tables[assignment_id][ta_id] = StaffTables(
+                extents_table, iqr_table, normal_stats
             )
-            for sub in graded
-        ]
-        nonzero_scores = [
-            (100 * sub["score"] / sub["assignment"]["points_possible"])
-            for sub in graded
-            if sub["score"] and sub["assignment"]["points_possible"]
-        ]
-
-        # IQR (with and without zeroes)
-        staff_pdf.ln()
-        iqr_table = [
-            ["", "Min", "25%", "Median", "75%", "Max"],
-            ["All Scores", *iqr(all_scores)],
-            ["Non-Zero Scores", *iqr(nonzero_scores)],
-        ]
-        make_table(staff_pdf, iqr_table)
-
-        # Mean, Variance, Std Dev
-        staff_pdf.ln()
-        normal_stats = [
-            ["", "Mean", "Variance", "Std Dev"],
-            ["All Scores", *get_normal_stats(all_scores)],
-            ["Non-Zero Scores", *get_normal_stats(nonzero_scores)],
-        ]
-        make_table(staff_pdf, normal_stats)
-
-        staff_tables[ta_id] = StaffTables(extents_table, iqr_table, normal_stats)
 
         # Grade distribution histogram
         # TODO: Make the histogram and embed it
@@ -224,7 +253,7 @@ def combine_tables(
 def make_score_reports_instructor(
     course: CourseData,
     all_graded: list[Submission],
-    staff_tables: dict[int, StaffTables],
+    assignment_staff_tables: dict[int, dict[int, StaffTables]],
     args: CronyConfiguration,
 ):
     instructor_reports = []
@@ -241,7 +270,7 @@ def make_score_reports_instructor(
         # Overall summary
         instructor_pdf.set_font("helvetica", size=12)
         #   TA Sts
-        instructor_pdf.write(txt=f"Staff: {len(staff_tables)}\n")
+        instructor_pdf.write(txt=f"Staff: {len(assignment_staff_tables)}\n")
         instructor_pdf.write(txt=f"Groups: {len(course['groups'])}\n")
         instructor_pdf.write(txt=f"Students: {len(course['students'])}\n")
         instructor_pdf.write(txt=f"Assignments: {len(course['assignments'])}\n")
@@ -255,31 +284,37 @@ def make_score_reports_instructor(
         instructor_pdf.ln()
 
         # List out the TA's progress
-        for stat_name, stat_field in [
-            ("Extents", "extents"),
-            ("IQR of Percentage Scores", "iqr"),
-            ("Normal Stats of Percentage Scores", "normal_stats"),
-        ]:
-            instructor_pdf.set_font(size=18)
-            instructor_pdf.write(txt=stat_name + ":\n")
-            names = [course["users"][ta_id]["name"] for ta_id in staff_tables]
-            taken_tables = combine_tables(
-                [getattr(staff_tables[ta_id], stat_field) for ta_id in staff_tables],
-                names,
-            )
-            instructor_pdf.set_font(size=12)
-            for table_name, table in taken_tables.items():
-                instructor_pdf.write(txt=table_name + ":\n")
-                make_table(instructor_pdf, table)
-                instructor_pdf.ln()
-            """
-            for ta_id, graded in staff_tables.items():
-                ta = course["users"][ta_id]
-                stat_table = getattr(staff_tables[ta_id], stat_field)
-                stat_table[0][0] = ta["name"]
-                make_table(instructor_pdf, stat_table)
-                instructor_pdf.ln()
-            """
+        for assignment_id, staff_tables in assignment_staff_tables.items():
+            if assignment_id is not None:
+                assignment = course["assignments"][assignment_id]
+                instructor_pdf.set_font(size=18)
+                instructor_pdf.write(txt=assignment["name"] + ":\n")
+                instructor_pdf.set_font(size=12)
+                instructor_pdf.write(
+                    txt=f"Total Points: {assignment['points_possible']}\n"
+                )
+            instructor_pdf.ln()
+            for stat_name, stat_field in [
+                ("Extents", "extents"),
+                ("IQR of Percentage Scores", "iqr"),
+                ("Normal Stats of Percentage Scores", "normal_stats"),
+            ]:
+                instructor_pdf.set_font(size=14)
+                instructor_pdf.write(txt=stat_name + ":\n")
+                names = [course["users"][ta_id]["name"] for ta_id in staff_tables]
+                taken_tables = combine_tables(
+                    [
+                        getattr(staff_tables[ta_id], stat_field)
+                        for ta_id in staff_tables
+                    ],
+                    names,
+                )
+                instructor_pdf.set_font(size=12)
+                for table_name, table in taken_tables.items():
+                    instructor_pdf.write(txt=table_name + ":\n")
+                    make_table(instructor_pdf, table)
+                    instructor_pdf.ln()
+            instructor_pdf.add_page()
 
         # Wrap it up
         instructor_reports.append(
