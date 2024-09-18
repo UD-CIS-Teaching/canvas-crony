@@ -135,5 +135,9 @@ class CanvasApi(CanvasRequest):
         elif submission["grader_id"] <= 0:
             submission["grader"] = submission["grader_id"]
         else:
-            submission["grader"] = course["users"][submission["grader_id"]]
+            if submission["grader_id"] not in course["users"]:
+                submission["grader"] = submission["grader_id"]
+            else:
+                submission["grader"] = course["users"][submission["grader_id"]]
+
         return submission
