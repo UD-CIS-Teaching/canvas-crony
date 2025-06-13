@@ -95,7 +95,13 @@ def make_grading_reports_instructor(
         for col_num, header in enumerate(MAIN_PAGE_HEADERS):
             worksheet.write(0, col_num, header)
 
-        for row_num, ta in enumerate(course["staff"].values(), start=1):
+        known_staff = {ta["id"] for ta in course["staff"].values()}
+        grader_tas = set(ta_graded_pile.keys())
+        all_tas = known_staff.union(grader_tas)
+        all_tas.discard(None)  # Remove any None entries if they exist
+
+        for row_num, ta_id in enumerate(all_tas, start=1):
+            ta = course["users"][ta_id]
             worksheet.write(row_num, 0, ta["name"])
 
             graded_submissions = ta_graded_pile.get(ta["id"], [])
