@@ -14,14 +14,12 @@ from reports.course_helpers import (
     make_grading_piles,
 )
 from reports.report_tools import make_table
-from reports.report_types import Report
+from reports.report_types import Report, PdfReport
 
 
 def make_ungraded_reports(course: CourseData, args: CronyConfiguration) -> list[Report]:
     reports = []
     staff_reports = {}
-
-    staff_for_student = get_staff_for_student(course)
 
     big_pile, ta_grading_piles = make_grading_piles(course)
 
@@ -108,13 +106,13 @@ def make_ungraded_reports_staff(
         """
         # Wrap it up
         staff_reports.append(
-            Report(
+            PdfReport(
                 "ungraded",
                 "{course_name} Grading Report for {user_name}",
                 ta,
-                staff_pdf,
                 course,
                 args,
+                staff_pdf,
             )
         )
     return staff_reports
@@ -222,13 +220,13 @@ def make_ungraded_reports_instructor(
             instructor_pdf.ln()
         # Wrap it up
         instructor_reports.append(
-            Report(
+            PdfReport(
                 "ungraded",
                 "{course_name} Instructor Grading Report for {user_name}",
                 instructor,
-                instructor_pdf,
                 course,
                 args,
+                instructor_pdf,
             )
         )
     return instructor_reports

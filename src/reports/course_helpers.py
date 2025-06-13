@@ -22,7 +22,73 @@ def get_staff_for_student(course: CourseData) -> dict[int, list[User]]:
     return staff_for_student
 
 
+def make_graded_piles(course: CourseData):
+    # Get each TA mapped to their list of students
+    staff_for_student = get_staff_for_student(course)
+
+    # Process each submission, add it to our piles if ungraded
+    ta_students_pile: dict[int, dict[GradingStatus, list[Submission]]] = {}
+    ta_graded_pile: dict[int, list[Submission]] = {}
+    big_pile: dict[GradingStatus, set[int]] = {
+        g: set() for g in get_args(GradingStatus)
+    }
+    for submission in course["submissions"].values():
+        assignment = submission["assignment"]
+        student = submission["user"]
+        staff = staff_for_student.get(student["id"], [])
+        grader = submission["grader"]
+
+        # Already machine graded
+        if (
+            grader
+            and isinstance(grader, int)
+            and submission["workflow_state"] == "graded"
+        ):
+            continue
+
+        for ta in staff:
+            status = classify_submission(submission, course["group_membership_ids"])
+            if ta["id"] not in ta_students_pile:
+                ta_students_pile[ta["id"]] = {g: [] for g in get_args(GradingStatus)}
+            ta_students_pile[ta["id"]][status].append(submission)
+            grader_id = grader["id"] if grader else None
+            if grader_id not in ta_graded_pile:
+                ta_graded_pile[grader_id] = []
+            ta_graded_pile[grader_id].append(submission)
+            big_pile[status].add(submission["id"])
+
+    return big_pile, ta_students_pile, ta_graded_pile
+
+
+def make_ungraded_piles(course):
+    """
+    Ignores anything which is already graded.
+    """
+    grader_piles: dict[int, list[Submission]] = {}
+    all_graded: list[Submission] = []
+    for submission in course["submissions"].values():
+        grader = submission["grader"]
+        # Only deal with graded
+        if submission["workflow_state"] != "graded":
+            continue
+        # Machine graded
+        if grader and isinstance(grader, int):
+            continue
+        if grader is None:
+            continue
+
+        if grader["id"] not in grader_piles:
+            grader_piles[grader["id"]] = []
+        grader_piles[grader["id"]].append(submission)
+        all_graded.append(submission)
+
+    return all_graded, grader_piles
+
+
 def make_grading_piles(course):
+    """
+    Makes grading piles for each TA, and a big pile of all ungraded submissions.
+    """
     # Get each TA mapped to their list of students
     staff_for_student = get_staff_for_student(course)
 

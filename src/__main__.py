@@ -59,7 +59,6 @@ parser.add_argument(
     default=None,
     help="The path to store the log data in. If not set, no log will be generated.",
 )
-
 parser.add_argument(
     "--unsafe",
     action="store_true",

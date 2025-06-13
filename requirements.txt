@@ -4,6 +4,7 @@ matplotlib
 pyyaml
 requests
 fpdf2
+xlsxwriter
 pytest
 requests-cache
 seaborn

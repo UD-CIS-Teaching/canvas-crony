@@ -15,10 +15,11 @@ from reports.course_helpers import (
     check_recency,
     days_old,
     make_grading_piles,
+    make_ungraded_piles,
 )
 from reports.report_tools import make_table
-from reports.report_types import Report
-
+from reports.report_types import Report, PdfReport
+from reports.stats_helpers import f, iqr, get_normal_stats
 
 RECENTLY_THRESHOLD = 3  # days
 ANCIENT_THRESHOLD = 7  # days
@@ -31,23 +32,7 @@ def make_score_reports(course: CourseData, args: CronyConfiguration) -> list[Rep
     staff_for_student = get_staff_for_student(course)
 
     # Process each submission, add it to our piles if ungraded
-    grader_piles: dict[int, list[Submission]] = {}
-    all_graded: list[Submission] = []
-    for submission in course["submissions"].values():
-        grader = submission["grader"]
-        # Only deal with graded
-        if submission["workflow_state"] != "graded":
-            continue
-        # Machine graded
-        if grader and isinstance(grader, int):
-            continue
-        if grader is None:
-            continue
-
-        if grader["id"] not in grader_piles:
-            grader_piles[grader["id"]] = []
-        grader_piles[grader["id"]].append(submission)
-        all_graded.append(submission)
+    all_graded, grader_piles = make_ungraded_piles(course)
 
     # Make a PDF for each TA
     staff_reports, staff_tables = make_score_reports_staff(
@@ -61,37 +46,6 @@ def make_score_reports(course: CourseData, args: CronyConfiguration) -> list[Rep
     reports.extend(staff_reports)
     reports.extend(instructor_reports)
     return reports
-
-
-def f(x):
-    return f"{x:.2f}".rstrip("0").rstrip(".")
-
-
-def iqr(scores):
-    if not scores:
-        return ["", "", "", "", ""]
-    scores = sorted(scores)
-    n = len(scores)
-    q1 = scores[min(n - 1, math.ceil(n * 0.25))]
-    median = scores[min(n - 1, math.ceil(n * 0.5))]
-    q3 = scores[min(n - 1, math.ceil(n * 0.75))]
-    # return [str(scores[0]), str(q1), str(median), str(q3), str(scores[-1])]
-    return [
-        f(scores[0]),
-        f(q1),
-        f(median),
-        f(q3),
-        f(scores[-1]),
-    ]
-
-
-def get_normal_stats(scores):
-    if not scores:
-        return ["", "", ""]
-    mean = sum(scores) / len(scores)
-    variance = sum((x - mean) ** 2 for x in scores) / len(scores)
-    std_dev = math.sqrt(variance)
-    return [f(mean), f(variance), f(std_dev)]
 
 
 @dataclass
@@ -222,13 +176,13 @@ def make_score_reports_staff(
         # TODO: Make the histogram and embed it
         # Wrap it up
         staff_reports.append(
-            Report(
+            PdfReport(
                 "score",
                 "{course_name} Score Report for {user_name}",
                 ta,
-                staff_pdf,
                 course,
                 args,
+                staff_pdf,
             )
         )
     return staff_reports, staff_tables
@@ -318,13 +272,13 @@ def make_score_reports_instructor(
 
         # Wrap it up
         instructor_reports.append(
-            Report(
+            PdfReport(
                 "score",
                 "{course_name} Instructor Score Report for {user_name}",
                 instructor,
-                instructor_pdf,
                 course,
                 args,
+                instructor_pdf,
             )
         )
     return instructor_reports

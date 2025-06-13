@@ -53,7 +53,10 @@ def send_email(reports: list[Report], settings: Settings) -> bool:
     for report in reports:
         with open(report.path, "rb") as fp:
             msg.add_attachment(
-                fp.read(), maintype="pdf", subtype="pdf", filename=report.filename
+                fp.read(),
+                maintype=report.maintype,
+                subtype=report.subtype,
+                filename=report.filename,
             )
 
     # Notice how smtplib now includes a send_message() method
